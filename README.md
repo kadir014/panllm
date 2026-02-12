@@ -17,11 +17,11 @@ Minimally, you only need one of the [supported inference backends](#Supported_in
 # Usage
 Simple text completion
 ```py
-from panllm import LLM, ModelConfig
+from panllm import LLM, LLMConfig
 
 MODEL_PATH = "C:/LLMs/SomeModel.gguf"
 
-config = ModelConfig(MODEL_PATH)
+config = LLMConfig(MODEL_PATH)
 llm = LLM(config)
 
 result = llm.generate("Once upon a time, in a distant kingdom")
@@ -31,14 +31,14 @@ print(result.full_content)
 
 Forcing a specific inference backend choice
 ```py
-from panllm import LLM, LLMBackend, ModelConfig, get_implemented_backends
+from panllm import LLM, LLMBackend, LLMConfig, get_implemented_backends
 
 MODEL_PATH = "C:/LLMs/SomeModel.gguf"
 
 # See all implemented inferences
 print(get_implemented_backends())
 
-config = ModelConfig(MODEL_PATH)
+config = LLMConfig(MODEL_PATH)
 
 # If the 'backend' argument is not given, it tries to choose one from the
 # currently implemented ones.
@@ -49,11 +49,11 @@ llm = LLM(config, backend=LLMBackend.LLAMA_CPP)
 
 Streamed chat generation
 ```py
-from panllm import LLM, ModelConfig
+from panllm import LLM, LLMConfig
 
 MODEL_PATH = "C:/LLMs/SomeModel.gguf"
 
-config = ModelConfig(MODEL_PATH)
+config = LLMConfig(MODEL_PATH)
 llm = LLM(config)
 
 messages = [

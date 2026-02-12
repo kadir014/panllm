@@ -131,7 +131,7 @@ class LlamaCppLLM(BaseLLM):
             specialize: bool = False
         ) -> int:
         return len(self._llama.tokenizer().encode(content, add_bos=add_bos, special=specialize))
-    
+
     def generate(self,
             prompt: str,
             generation_config: GenerationConfig | None = None
@@ -164,7 +164,7 @@ class LlamaCppLLM(BaseLLM):
                 tokens_per_second=tps
             )
         )
-    
+
     def generate_chat(self,
             messages: Iterable[dict[str, str]],
             generation_config: GenerationConfig | None = None
@@ -196,7 +196,7 @@ class LlamaCppLLM(BaseLLM):
                 tokens_per_second=tps
             )
         )
-    
+
     def stream(self,
             prompt: str,
             generation_config: GenerationConfig | None = None
@@ -215,7 +215,7 @@ class LlamaCppLLM(BaseLLM):
         )
 
         return LLamaCppStream(self, res)
-    
+
     def stream_chat(self,
             messages: Iterable[dict[str, str]],
             generation_config: GenerationConfig | None = None
