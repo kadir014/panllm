@@ -15,6 +15,7 @@ from time import perf_counter
 
 import llama_cpp
 from llama_cpp import llama_log_set
+from llama_cpp.llama_chat_format import Jinja2ChatFormatter
 
 from panllm.backends.base import BaseLLM, BaseStream
 from panllm.models import (
@@ -101,6 +102,50 @@ class LlamaCppLLM(BaseLLM):
             _llama_cpp_force_disable_logs()
 
         super().__init__(model_config)
+
+    def _get_custom_chat_handler(self) -> Jinja2ChatFormatter | None:
+        """
+        Get custom Jinja2 chat handler.
+
+        llama-cpp-python already has lots of chat template handlers implemented.
+        However, the default Jinja2 handlers created internally are not accessible
+        or alterable, this makes it difficult to add new parameters to the template.
+
+        This function takes the internal Jinja2 handlers created in llama_cpp.Llama
+        and minimally configures them for certain parameters.
+
+        TODO: Currently I use this only for reasoning, but make this flexible for
+              taking template variables dynamically, perhaps in model config.
+        """
+
+        # vocab-only -> No weights, only metadata
+        vocab = llama_cpp.Llama(
+            model_path=self.model_config.path,
+            verbose=False,
+            vocab_only=True
+        )
+
+        loaded_template = vocab.metadata["tokenizer.chat_template"]
+        if "enable_thinking" not in loaded_template:
+           return None
+
+        enable_thinking = False
+        t = f"{{%- set enable_thinking = {int(enable_thinking)} -%}}\n"
+        new_template = t + loaded_template
+
+        eos_token_id = vocab.token_eos()
+        bos_token_id = vocab.token_bos()
+        eos_token = vocab._model.token_get_text(eos_token_id) if eos_token_id != -1 else ""
+        bos_token = vocab._model.token_get_text(bos_token_id) if bos_token_id != -1 else ""
+
+        custom_formatter = Jinja2ChatFormatter(
+            template=new_template,
+            eos_token=eos_token,
+            bos_token=bos_token,
+            stop_token_ids=[eos_token_id]
+        )
+
+        return custom_formatter.to_chat_handler()
     
     def load(self) -> None:
         self.__seed = llama_cpp.LLAMA_DEFAULT_SEED
@@ -110,7 +155,8 @@ class LlamaCppLLM(BaseLLM):
             n_gpu_layers=-1,
             verbose=self.model_config.verbose,
             n_ctx=self.model_config.context,
-            seed=self.__seed
+            seed=self.__seed,
+            chat_handler=self._get_custom_chat_handler()
         )
 
     def release(self) -> None:

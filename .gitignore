@@ -1,5 +1,6 @@
 # Project stuff
 uv.lock
+.vscode
 example.py
 panllmtest_*.py
 
