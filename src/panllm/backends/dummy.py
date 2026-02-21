@@ -16,6 +16,7 @@ import string
 
 from panllm.backends.base import BaseLLM, BaseStream
 from panllm.models import (
+    LLMBackend,
     GenerationConfig,
     TextGenerationResult,
     ChatChunk,
@@ -52,12 +53,10 @@ class DummyStream(BaseStream):
     def __iter__(self) -> Iterator[str | ChatChunk]:
         _start = perf_counter()
 
-        self.__llm._set_rand()
-
         content = ""
         possible_tokens = string.printable.strip()
         for _ in range(self.__cfg.max_tokens):
-            content += random.choice(possible_tokens)
+            content += self.__llm._prng.choice(possible_tokens)
             token = content[-1]
 
             _dummy_block()
@@ -69,8 +68,6 @@ class DummyStream(BaseStream):
                 yield ChatChunk(role="assistant", content=token)
 
         elapsed = perf_counter() - _start
-
-        self.__llm._restore_rand()
 
         tokens = self.__llm.token_length(content)
         tps = tokens / elapsed
@@ -84,8 +81,8 @@ class DummyLLM(BaseLLM):
     """
     
     def load(self) -> None:
-        self.__seed = -1
-        self.__rand_state = None
+        self._prng = random.Random(0)
+        self.seed = -1
 
     def release(self) -> None:
         ...
@@ -98,20 +95,13 @@ class DummyLLM(BaseLLM):
     def seed(self, new_value: int) -> None:
         self.__seed = new_value
 
+        if self.__seed < 0:
+            self._prng.seed(random.randint(0, 4294967295 - 1))
+        else:
+            self._prng.seed(self.__seed)
+
     def token_length(self, content: str, add_bos: bool = True) -> int:
         return len(content) // 3
-    
-    def _set_rand(self) -> None:
-        """ Change random seed and store state. """
-        self.__rand_state = random.getstate()
-        seed = self.seed
-        if seed == -1:
-            seed = random.randint(0, 4294967295 - 1)
-        random.seed(seed)
-
-    def _restore_rand(self) -> None:
-        """ Restore back to old random state. """
-        random.setstate(self.__rand_state)
     
     def generate(self,
             prompt: str,
@@ -122,17 +112,13 @@ class DummyLLM(BaseLLM):
         else:
             cfg = generation_config
 
-        self._set_rand()
-
         _start = perf_counter()
         content = ""
         possible_tokens = string.printable.strip()
         for _ in range(cfg.max_tokens):
-            content += random.choice(possible_tokens)
+            content += self._prng.choice(possible_tokens)
             _dummy_block()
         elapsed = perf_counter() - _start
-
-        self._restore_rand()
 
         tokens = self.token_length(content)
         tps = tokens / elapsed
@@ -156,17 +142,13 @@ class DummyLLM(BaseLLM):
         else:
             cfg = generation_config
 
-        self._set_rand()
-
         _start = perf_counter()
         content = ""
         possible_tokens = string.printable.strip()
         for _ in range(cfg.max_tokens):
-            content += random.choice(possible_tokens)
+            content += self._prng.choice(possible_tokens)
             _dummy_block()
         elapsed = perf_counter() - _start
-
-        self._restore_rand()
 
         tokens = self.token_length(content)
         tps = tokens / elapsed

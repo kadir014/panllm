@@ -14,6 +14,7 @@ from abc import ABC, abstractmethod
 
 from panllm.models import (
     LLMConfig,
+    LLMBackend,
     GenerationConfig,
     GenerationStats,
     TextGenerationResult,
@@ -49,25 +50,32 @@ class BaseLLM(ABC):
     Abstract interface for backend inference implementations.
     """
 
-    def __init__(self, model_config: LLMConfig) -> None:
+    def __init__(self, model_config: LLMConfig, backend: LLMBackend) -> None:
         self.__model_config = model_config
+        self._backend = backend
 
         self.load()
 
     @property
     def model_config(self) -> LLMConfig:
+        """ Configuration used to initialize the model. """
         return self.__model_config
+    
+    @property
+    def backend(self) -> LLMBackend:
+        """ Inference backend being used. """
+        return self._backend
     
     @property
     @abstractmethod
     def seed(self) -> int:
-        """ Get the sampling seed. """
+        """ Get the sampling seed. Sampling is random if negative. """
         ...
 
     @seed.setter
     @abstractmethod
     def seed(self, new_value: int) -> None:
-        """ Set the sampling seed. """
+        """ Set the sampling seed. Sampling is random if negative. """
         ...
     
     @abstractmethod
@@ -86,7 +94,16 @@ class BaseLLM(ABC):
             add_bos: bool = True,
             specialize: bool = False
         ) -> int:
-        """ Calculate the amount of tokens the text content has. """
+        """ 
+        Calculate the amount of tokens the text content has.
+        
+        Parameters
+        ----------
+        add_bos
+            Add BOS token
+        specialize
+            Convert special tokens in the text content into actual special tokens
+        """
         ...
 
     @abstractmethod
@@ -94,7 +111,16 @@ class BaseLLM(ABC):
             prompt: str,
             generation_config: GenerationConfig | None = None
         ) -> TextGenerationResult:
-        """ Generate text completion. """
+        """
+        Generate text completion.
+        
+        Parameters
+        ----------
+        prompt
+            Text prompt to be used for generation
+        generation_config
+            Configuration used for generation
+        """
         ...
 
     @abstractmethod
@@ -102,7 +128,16 @@ class BaseLLM(ABC):
             messages: Iterable[dict[str, str]],
             generation_config: GenerationConfig | None = None
         ) -> ChatGenerationResult:
-        """ Generate text chat completion. """
+        """
+        Generate text chat completion.
+        
+        Parameters
+        ----------
+        prompt
+            Array of messages to use as prompt
+        generation_config
+            Configuration used for generation
+        """
         ...
 
     @abstractmethod
@@ -110,7 +145,16 @@ class BaseLLM(ABC):
             prompt: str,
             generation_config: GenerationConfig | None = None
         ) -> BaseStream:
-        """ Stream text completion. """
+        """
+        Stream text completion.
+        
+        Parameters
+        ----------
+        prompt
+            Text prompt to be used for generation
+        generation_config
+            Configuration used for generation
+        """
         ...
 
     @abstractmethod
@@ -118,5 +162,14 @@ class BaseLLM(ABC):
             messages: Iterable[dict[str, str]],
             generation_config: GenerationConfig | None = None
         ) -> BaseStream:
-        """ Stream text chat completion. """
+        """
+        Stream text chat completion.
+        
+        Parameters
+        ----------
+        prompt
+            Array of messages to use as prompt
+        generation_config
+            Configuration used for generation
+        """
         ...

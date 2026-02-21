@@ -33,12 +33,12 @@ def LLM(
 
     if backend == LLMBackend.DUMMY:
         from panllm.backends.dummy import DummyLLM
-        return DummyLLM(model_config)
+        return DummyLLM(model_config, backend)
 
     elif backend == LLMBackend.LLAMA_CPP:
         from panllm.backends._llama_cpp import LlamaCppLLM
-        return LlamaCppLLM(model_config)
+        return LlamaCppLLM(model_config, backend)
     
     elif backend == LLMBackend.EXLLAMAV2:
         from panllm.backends._exllamav2 import ExLlamaV2LLM
-        return ExLlamaV2LLM(model_config)
+        return ExLlamaV2LLM(model_config, backend)

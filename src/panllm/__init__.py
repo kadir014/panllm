@@ -9,7 +9,15 @@
 """
 
 from panllm.backends.base import BaseLLM
-from panllm.models import LLMConfig, GenerationConfig, LLMBackend
+from panllm.models import (
+    LLMBackend,
+    LLMConfig,
+    GenerationConfig,
+    GenerationStats,
+    TextGenerationResult,
+    ChatChunk,
+    ChatGenerationResult
+)
 
 
 LLAMA_CPP_IMPLEMENTED = True
@@ -46,8 +54,15 @@ __version__ = "0.0.1"
 
 __all__ = [
     "BaseLLM",
-    "LLMConfig", "GenerationConfig", "LLMBackend",
-    "LLAMA_CPP_IMPLEMENTED", "EXLLAMAV2_IMPLEMENTED",
+    "LLMConfig",
+    "GenerationConfig",
+    "LLMBackend",
+    "GenerationStats",
+    "TextGenerationResult",
+    "ChatChunk",
+    "ChatGenerationResult",
+    "LLAMA_CPP_IMPLEMENTED",
+    "EXLLAMAV2_IMPLEMENTED",
     "get_implemented_backends",
     "LLM",
     "__version__"

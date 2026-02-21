@@ -19,6 +19,7 @@ from llama_cpp.llama_chat_format import Jinja2ChatFormatter
 
 from panllm.backends.base import BaseLLM, BaseStream
 from panllm.models import (
+    LLMBackend,
     GenerationConfig,
     TextGenerationResult,
     LLMConfig,
@@ -97,11 +98,11 @@ class LlamaCppLLM(BaseLLM):
     llama-cpp-python backend implementation.
     """
 
-    def __init__(self, model_config: LLMConfig) -> None:
+    def __init__(self, model_config: LLMConfig, backend: LLMBackend) -> None:
         if not model_config.verbose:
             _llama_cpp_force_disable_logs()
 
-        super().__init__(model_config)
+        super().__init__(model_config, backend)
 
     def _get_custom_chat_handler(self) -> Jinja2ChatFormatter | None:
         """
