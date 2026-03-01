@@ -122,7 +122,7 @@ class LlamaCppLLM(BaseLLM):
         # vocab-only -> No weights, only metadata
         vocab = llama_cpp.Llama(
             model_path=self.model_config.path,
-            verbose=False,
+            verbose=self.model_config.verbose,
             vocab_only=True
         )
 
