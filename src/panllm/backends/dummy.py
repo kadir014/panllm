@@ -16,7 +16,6 @@ import string
 
 from panllm.backends.base import BaseLLM, BaseStream
 from panllm.models import (
-    LLMBackend,
     GenerationConfig,
     TextGenerationResult,
     ChatChunk,
@@ -41,7 +40,9 @@ class DummyStream(BaseStream):
         self.__llm = llm
         self.__prompt = prompt
         self.__cfg = cfg
-        self.__stats = None
+        self.__stats: GenerationStats | None = None
+
+        self.__start_time = 0.0
 
     @property
     def stats(self) -> GenerationStats:
@@ -51,7 +52,7 @@ class DummyStream(BaseStream):
         return self.__stats
 
     def __iter__(self) -> Iterator[str | ChatChunk]:
-        _start = perf_counter()
+        self.__start_time = perf_counter()
 
         content = ""
         possible_tokens = string.printable.strip()
@@ -62,15 +63,21 @@ class DummyStream(BaseStream):
             _dummy_block()
             
             if isinstance(self.__prompt, str):
+                self._update_stats(self.__llm.token_length(content))
                 yield token
 
             else:
+                self._update_stats(self.__llm.token_length(content))
                 yield ChatChunk(role="assistant", content=token)
 
-        elapsed = perf_counter() - _start
+        self._update_stats(self.__llm.token_length(content))
 
-        tokens = self.__llm.token_length(content)
-        tps = tokens / elapsed
+    def _update_stats(self, tokens: int) -> None:
+        elapsed = perf_counter() - self.__start_time
+        if elapsed < 0.00001:
+            tps = 0.0
+        else:
+            tps = tokens / elapsed
 
         self.__stats = GenerationStats(elapsed, tokens, tps)
 
