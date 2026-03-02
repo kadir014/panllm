@@ -8,7 +8,7 @@
 
 """
 
-from panllm.backends.base import BaseLLM
+from panllm.backends.base import BaseLLM, BaseStream
 from panllm.models import (
     LLMBackend,
     LLMConfig,
@@ -54,9 +54,10 @@ __version__ = "0.0.1"
 
 __all__ = [
     "BaseLLM",
+    "BaseStream",
     "LLMConfig",
-    "GenerationConfig",
     "LLMBackend",
+    "GenerationConfig",
     "GenerationStats",
     "TextGenerationResult",
     "ChatChunk",

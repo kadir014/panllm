@@ -12,6 +12,7 @@ from typing import Iterable, Iterator
 
 import ctypes
 from time import perf_counter
+import random
 
 import llama_cpp
 from llama_cpp import llama_log_set
@@ -47,8 +48,10 @@ class LLamaCppStream(BaseStream):
     def __init__(self, llm: "LlamaCppLLM", res) -> None:
         self.__llm = llm
         self.__res = res
-        self.__last_role = None
-        self.__stats = None
+        self.__last_role: str | None = None
+        self.__stats: GenerationStats | None = None
+
+        self.__start_time = 0.0
 
     @property
     def stats(self) -> GenerationStats:
@@ -58,7 +61,7 @@ class LLamaCppStream(BaseStream):
         return self.__stats
 
     def __iter__(self) -> Iterator[str | ChatChunk]:
-        _start = perf_counter()
+        self.__start_time = perf_counter()
 
         # TODO: This is not the actual total amount of tokens, just the text content
         tokens = 0
@@ -68,7 +71,10 @@ class LLamaCppStream(BaseStream):
 
             if "text" in choice:
                 token = choice["text"]
-                tokens += self.__llm.token_length(token, add_bos=False, specialize=False)
+                tokens += self.__llm.token_length(
+                    token, add_bos=False, specialize=False
+                )
+                self._update_stats(tokens)
                 yield token
 
             elif "delta" in choice:
@@ -84,11 +90,20 @@ class LLamaCppStream(BaseStream):
                         continue
 
                     token = choice["delta"]["content"]
-                    tokens += self.__llm.token_length(token, add_bos=False, specialize=False)
+                    tokens += self.__llm.token_length(
+                        token, add_bos=False, specialize=False
+                    )
+                    self._update_stats(tokens)
                     yield ChatChunk(role=self.__last_role, content=token)
 
-        elapsed = perf_counter() - _start
-        tps = tokens / elapsed
+        self._update_stats(tokens)
+
+    def _update_stats(self, tokens: int) -> None:
+        elapsed = perf_counter() - self.__start_time
+        if elapsed < 0.00001:
+            tps = 0.0
+        else:
+            tps = tokens / elapsed
 
         self.__stats = GenerationStats(elapsed, tokens, tps)
 
@@ -101,6 +116,8 @@ class LlamaCppLLM(BaseLLM):
     def __init__(self, model_config: LLMConfig, backend: LLMBackend) -> None:
         if not model_config.verbose:
             _llama_cpp_force_disable_logs()
+
+        self._internal_seed = llama_cpp.LLAMA_DEFAULT_SEED
 
         super().__init__(model_config, backend)
 
@@ -148,15 +165,18 @@ class LlamaCppLLM(BaseLLM):
 
         return custom_formatter.to_chat_handler()
     
+    def _ensure_internal_seed(self) -> None:
+        if self.__seed < 0:
+            self._internal_seed = random.randint(0, 4294967295 - 1)
+        self._llama.set_seed(self._internal_seed)
+    
     def load(self) -> None:
-        self.__seed = llama_cpp.LLAMA_DEFAULT_SEED
-
         self._llama = llama_cpp.Llama(
             model_path=self.model_config.path,
             n_gpu_layers=-1,
             verbose=self.model_config.verbose,
             n_ctx=self.model_config.context,
-            seed=self.__seed,
+            seed=self._internal_seed,
             chat_handler=self._get_custom_chat_handler()
         )
 
@@ -170,7 +190,8 @@ class LlamaCppLLM(BaseLLM):
     @seed.setter
     def seed(self, new_value: int) -> None:
         self.__seed = new_value
-        self._llama.set_seed(new_value)
+        self._internal_seed = new_value
+        self._ensure_internal_seed()
 
     def token_length(self,
             content: str,
@@ -188,12 +209,14 @@ class LlamaCppLLM(BaseLLM):
         else:
             cfg = generation_config
 
+        self._ensure_internal_seed()
+
         _start = perf_counter()
         res = self._llama.create_completion(
             prompt=prompt,
             max_tokens=cfg.max_tokens,
             temperature=cfg.temperature,
-            seed=self.__seed
+            seed=self._internal_seed
         )
         elapsed = perf_counter() - _start
 
@@ -221,12 +244,14 @@ class LlamaCppLLM(BaseLLM):
         else:
             cfg = generation_config
 
+        self._ensure_internal_seed()
+
         _start = perf_counter()
         res = self._llama.create_chat_completion(
             messages=messages,
             max_tokens=cfg.max_tokens,
             temperature=cfg.temperature,
-            seed=self.__seed
+            seed=self._internal_seed
         )
         elapsed = perf_counter() - _start
 
@@ -253,12 +278,14 @@ class LlamaCppLLM(BaseLLM):
         else:
             cfg = generation_config
 
+        self._ensure_internal_seed()
+
         res = self._llama.create_completion(
             prompt=prompt,
             stream=True,
             max_tokens=cfg.max_tokens,
             temperature=cfg.temperature,
-            seed=self.__seed
+            seed=self._internal_seed
         )
 
         return LLamaCppStream(self, res)
@@ -272,12 +299,14 @@ class LlamaCppLLM(BaseLLM):
         else:
             cfg = generation_config
 
+        self._ensure_internal_seed()
+
         res = self._llama.create_chat_completion(
             messages=messages,
             stream=True,
             max_tokens=cfg.max_tokens,
             temperature=cfg.temperature,
-            seed=self.__seed
+            seed=self._internal_seed
         )
 
         return LLamaCppStream(self, res)

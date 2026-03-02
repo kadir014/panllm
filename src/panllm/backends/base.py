@@ -28,19 +28,21 @@ class BaseStream(ABC):
     @abstractmethod
     def stats(self) -> GenerationStats:
         """
-        Generation statistics for the whole streaming session.
+        Generation statistics for the current streaming session.
         
-        Values will be just zero if all tokens are not exhausted yet.
+        Values will be zero until tokens begin to be consumed.
+        Statistics can be accessed while streaming, but timing-related
+        values may be inaccurate at the beginning.
         """
         ...
 
     @abstractmethod
     def __iter__(self) -> Iterator[str | ChatChunk]:
         """
-        Iterate over streamed chunks.
-        
-        It can be either one token (a single string), or a ChatChunk
-        depending on the type of the generation request made.
+        Iterate over streamed output chunks.
+
+        Each yielded item is either a single token (as a string) or a
+        ChatChunk instance, depending on the type of generation request.
         """
         ...
 
@@ -69,13 +71,16 @@ class BaseLLM(ABC):
     @property
     @abstractmethod
     def seed(self) -> int:
-        """ Get the sampling seed. Sampling is random if negative. """
+        """
+        Sampling seed.
+        
+        If negative, internal seed is shuffled for each inference.
+        """
         ...
 
     @seed.setter
     @abstractmethod
     def seed(self, new_value: int) -> None:
-        """ Set the sampling seed. Sampling is random if negative. """
         ...
     
     @abstractmethod
