@@ -3,6 +3,7 @@ uv.lock
 .vscode
 example.py
 panllmtest_*.py
+dev/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
