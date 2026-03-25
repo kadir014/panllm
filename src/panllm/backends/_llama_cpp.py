@@ -117,7 +117,10 @@ class LlamaCppLLM(BaseLLM):
         if not model_config.verbose:
             _llama_cpp_force_disable_logs()
 
+        self.__seed = -1
         self._internal_seed = llama_cpp.LLAMA_DEFAULT_SEED
+
+        self._formatter: Jinja2ChatFormatter | None = None
 
         super().__init__(model_config, backend)
 
@@ -144,32 +147,33 @@ class LlamaCppLLM(BaseLLM):
         )
 
         loaded_template = vocab.metadata["tokenizer.chat_template"]
-        if "enable_thinking" not in loaded_template:
-           return None
 
-        enable_thinking = False
-        t = f"{{%- set enable_thinking = {int(enable_thinking)} -%}}\n"
-        new_template = t + loaded_template
+        new_template = loaded_template
+
+        if "enable_thinking" in loaded_template:
+            enable_thinking = False
+            t = f"{{%- set enable_thinking = {int(enable_thinking)} -%}}\n"
+            new_template = t + loaded_template
 
         eos_token_id = vocab.token_eos()
         bos_token_id = vocab.token_bos()
         eos_token = vocab._model.token_get_text(eos_token_id) if eos_token_id != -1 else ""
         bos_token = vocab._model.token_get_text(bos_token_id) if bos_token_id != -1 else ""
 
-        custom_formatter = Jinja2ChatFormatter(
+        self._formatter  = Jinja2ChatFormatter(
             template=new_template,
             eos_token=eos_token,
             bos_token=bos_token,
             stop_token_ids=[eos_token_id]
         )
 
-        return custom_formatter.to_chat_handler()
-    
+        return self._formatter.to_chat_handler()
+
     def _ensure_internal_seed(self) -> None:
         if self.__seed < 0:
             self._internal_seed = random.randint(0, 4294967295 - 1)
         self._llama.set_seed(self._internal_seed)
-    
+
     def load(self) -> None:
         self._llama = llama_cpp.Llama(
             model_path=self.model_config.path,
