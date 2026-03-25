@@ -82,6 +82,26 @@ class BaseLLM(ABC):
     @abstractmethod
     def seed(self, new_value: int) -> None:
         ...
+
+    @property
+    @abstractmethod
+    def eos_token(self) -> str:
+        """
+        EOS token of the model as special string.
+        
+        Empty string if it doesn't exist or failed to load.
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def bos_token(self) -> str:
+        """
+        BOS token of the model as special string.
+        
+        Empty string if it doesn't exist or failed to load.
+        """
+        ...
     
     @abstractmethod
     def load(self) -> None:

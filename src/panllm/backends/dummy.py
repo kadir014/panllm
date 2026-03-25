@@ -107,6 +107,14 @@ class DummyLLM(BaseLLM):
         else:
             self._prng.seed(self.__seed)
 
+    @property
+    def eos_token(self) -> str:
+        return ""
+
+    @property
+    def bos_token(self) -> str:
+        return ""
+
     def token_length(self, content: str, add_bos: bool = True) -> int:
         return len(content) // 3
     

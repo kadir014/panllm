@@ -197,6 +197,18 @@ class LlamaCppLLM(BaseLLM):
         self._internal_seed = new_value
         self._ensure_internal_seed()
 
+    @property
+    def eos_token(self) -> str:
+        eos_token_id = self._llama.token_eos()
+        if eos_token_id == -1: return ""
+        return self._llama._model.token_get_text(eos_token_id)
+
+    @property
+    def bos_token(self) -> str:
+        bos_token_id = self._llama.token_bos()
+        if bos_token_id == -1: return ""
+        return self._llama._model.token_get_text(bos_token_id)
+
     def token_length(self,
             content: str,
             add_bos: bool = True,
