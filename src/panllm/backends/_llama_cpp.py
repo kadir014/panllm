@@ -232,7 +232,12 @@ class LlamaCppLLM(BaseLLM):
             prompt=prompt,
             max_tokens=cfg.max_tokens,
             temperature=cfg.temperature,
-            seed=self._internal_seed
+            seed=self._internal_seed,
+            top_p=cfg.top_p,
+            min_p=cfg.min_p,
+            top_k=cfg.top_k,
+            frequency_penalty=cfg.frequence_penalty,
+            presence_penalty=cfg.presence_penalty
         )
         elapsed = perf_counter() - _start
 
@@ -267,7 +272,12 @@ class LlamaCppLLM(BaseLLM):
             messages=messages,
             max_tokens=cfg.max_tokens,
             temperature=cfg.temperature,
-            seed=self._internal_seed
+            seed=self._internal_seed,
+            top_p=cfg.top_p,
+            min_p=cfg.min_p,
+            top_k=cfg.top_k,
+            frequency_penalty=cfg.frequence_penalty,
+            presence_penalty=cfg.presence_penalty
         )
         elapsed = perf_counter() - _start
 
@@ -301,7 +311,12 @@ class LlamaCppLLM(BaseLLM):
             stream=True,
             max_tokens=cfg.max_tokens,
             temperature=cfg.temperature,
-            seed=self._internal_seed
+            seed=self._internal_seed,
+            top_p=cfg.top_p,
+            min_p=cfg.min_p,
+            top_k=cfg.top_k,
+            frequency_penalty=cfg.frequence_penalty,
+            presence_penalty=cfg.presence_penalty
         )
 
         return LLamaCppStream(self, res)
@@ -322,7 +337,12 @@ class LlamaCppLLM(BaseLLM):
             stream=True,
             max_tokens=cfg.max_tokens,
             temperature=cfg.temperature,
-            seed=self._internal_seed
+            seed=self._internal_seed,
+            top_p=cfg.top_p,
+            min_p=cfg.min_p,
+            top_k=cfg.top_k,
+            frequency_penalty=cfg.frequence_penalty,
+            presence_penalty=cfg.presence_penalty
         )
 
         return LLamaCppStream(self, res)

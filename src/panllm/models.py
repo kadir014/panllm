@@ -39,16 +39,24 @@ class GenerationConfig:
     """
     Genericized text generation and sampling configuration.
 
-    Fields
-    ------
+    Attributes
+    ----------
     max_tokens
         Maximum number of tokens generated
     temperature
         Sampling temperature
+    TODO: Rest of the attributes
     """
 
     max_tokens: int = 256
+
     temperature: float = 0.8
+    top_p: float = 0.95
+    min_p: float = 0.05
+    top_k: int = 40
+
+    frequence_penalty: float = 0.0
+    presence_penalty: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -56,8 +64,8 @@ class GenerationStats:
     """
     Generation statistics.
 
-    Fields
-    ------
+    Attributes
+    ----------
     elapsed
         Elapsed time to generate in seconds
     tokens
@@ -76,8 +84,8 @@ class TextGenerationResult:
     """
     Text completion generation results.
 
-    Fields
-    ------
+    Attributes
+    ----------
     full_content
         Initial prompt + generated text content
     generated_content
@@ -95,6 +103,13 @@ class TextGenerationResult:
 class ChatChunk:
     """
     One chunk of text chat representing one message.
+
+    Attributes
+    ----------
+    role
+        Role of the author of this chat chunk
+    content
+        Text content
     """
 
     role: str
@@ -106,8 +121,8 @@ class ChatGenerationResult:
     """
     Text chat completion generation results.
 
-    Fields
-    ------
+    Attributes
+    ----------
     message
         Generated text message
     stats
