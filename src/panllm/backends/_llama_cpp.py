@@ -237,7 +237,7 @@ class LlamaCppLLM(BaseLLM):
             min_p=cfg.min_p,
             top_k=cfg.top_k,
             frequency_penalty=cfg.frequence_penalty,
-            presence_penalty=cfg.presence_penalty
+            present_penalty=cfg.presence_penalty
         )
         elapsed = perf_counter() - _start
 
@@ -277,7 +277,7 @@ class LlamaCppLLM(BaseLLM):
             min_p=cfg.min_p,
             top_k=cfg.top_k,
             frequency_penalty=cfg.frequence_penalty,
-            presence_penalty=cfg.presence_penalty
+            present_penalty=cfg.presence_penalty
         )
         elapsed = perf_counter() - _start
 
@@ -316,7 +316,7 @@ class LlamaCppLLM(BaseLLM):
             min_p=cfg.min_p,
             top_k=cfg.top_k,
             frequency_penalty=cfg.frequence_penalty,
-            presence_penalty=cfg.presence_penalty
+            present_penalty=cfg.presence_penalty
         )
 
         return LLamaCppStream(self, res)
@@ -342,7 +342,7 @@ class LlamaCppLLM(BaseLLM):
             min_p=cfg.min_p,
             top_k=cfg.top_k,
             frequency_penalty=cfg.frequence_penalty,
-            presence_penalty=cfg.presence_penalty
+            present_penalty=cfg.presence_penalty
         )
 
         return LLamaCppStream(self, res)
